@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>משחק המילים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #FFF8F0;
+  --bg-tint-1: rgba(255, 201, 77, 0.09);
+  --bg-tint-2: rgba(255, 122, 77, 0.07);
+  --surface: #FFFFFF;
+  --surface-2: #FFF3E4;
+  --ink: #2C3140;
+  --ink-soft: #5A5F6E;
+  --muted: #8B7F75;
+  --line: #EAD9C4;
+  --primary: #FF7A4D;
+  --primary-soft: #FFE4D6;
+  --primary-ink: #A83E1E;
+  --success: #2FB8A8;
+  --success-soft: #D6F2EE;
+  --success-ink: #1E7A6E;
+  --danger: #E85A5A;
+  --danger-soft: #FCE0E0;
+  --danger-ink: #A03030;
+  --shadow: 0 8px 24px rgba(255, 122, 77, 0.14);
+  --shadow-soft: 0 4px 12px rgba(44, 49, 64, 0.06);
+  --shadow-primary: 0 12px 28px rgba(255, 122, 77, 0.28);
+  --radius: 20px;
+  --radius-lg: 28px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #1A1F2E;
+    --bg-tint-1: rgba(255, 201, 77, 0.05);
+    --bg-tint-2: rgba(255, 122, 77, 0.06);
+    --surface: #242938;
+    --surface-2: #2D3345;
+    --ink: #F0F0F5;
+    --ink-soft: #C4C8D4;
+    --muted: #8B92A6;
+    --line: #3A4157;
+    --primary: #FF9670;
+    --primary-soft: #4A2D22;
+    --primary-ink: #FFD5C0;
+    --success: #4DD0BF;
+    --success-soft: #1F3D3A;
+    --success-ink: #A0EDDF;
+    --danger: #FF7878;
+    --danger-soft: #3D2020;
+    --danger-ink: #FFB5B5;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.25);
+    --shadow-primary: 0 12px 28px rgba(255, 150, 112, 0.25);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 8%, var(--bg-tint-1) 0%, transparent 45%),
+    radial-gradient(circle at 85% 92%, var(--bg-tint-2) 0%, transparent 45%),
+    var(--bg);
+  color: var(--ink);
+  font-family: 'Rubik', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  direction: rtl;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1.5;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+}
+
+.arabic { font-family: 'Tajawal', 'Rubik', sans-serif; direction: rtl; }
+.hebrew { font-family: 'Rubik', 'Tajawal', sans-serif; direction: rtl; }
+
+.container { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+
+.header { text-align: center; margin-bottom: 28px; padding-top: 8px; }
+.emoji-row { font-size: 2rem; margin-bottom: 10px; letter-spacing: 0.15em; }
+h1 { font-size: 2.2rem; font-weight: 700; margin: 0 0 10px; text-wrap: balance; color: var(--ink); letter-spacing: -0.02em; }
+.subtitle { color: var(--ink-soft); font-size: 1rem; margin: 0; text-wrap: balance; }
+.subtitle .accent { color: var(--primary); font-weight: 600; }
+
+.groups { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 22px; }
+@media (max-width: 430px) { .groups { grid-template-columns: 1fr; gap: 12px; } }
+
+.group-card {
+  background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius-lg);
+  padding: 26px 18px; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s, border-color 0.15s;
+  text-align: center; font-family: inherit; color: inherit;
+  min-height: 170px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px;
+}
+.group-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--primary); }
+.group-card:active { transform: translateY(-1px); }
+.group-emoji { font-size: 2.6rem; line-height: 1; }
+.group-title { font-size: 1.2rem; font-weight: 700; color: var(--ink); }
+.group-count { color: var(--muted); font-size: 0.88rem; font-weight: 500; }
+
+.modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
+@media (max-width: 430px) { .modes { grid-template-columns: 1fr; } }
+
+.mode-card {
+  background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius);
+  padding: 20px 16px; cursor: pointer;
+  transition: transform 0.12s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  font-family: inherit; color: inherit; text-align: center;
+  min-height: 96px; display: flex; flex-direction: column; justify-content: center; gap: 6px;
+}
+.mode-card:hover { border-color: var(--primary); background: var(--primary-soft); transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+.mode-line-1 { font-weight: 600; font-size: 1.02rem; color: var(--ink); }
+.mode-line-2 { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
+
+.practice-header {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface); padding: 14px 18px; border-radius: var(--radius);
+  margin-bottom: 18px; box-shadow: var(--shadow-soft); border: 1px solid var(--line);
+}
+.progress { font-weight: 600; color: var(--ink-soft); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.score { background: var(--success-soft); color: var(--success-ink); padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+
+.question-card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  padding: 36px 20px 32px; text-align: center;
+  box-shadow: var(--shadow-soft); border: 1px solid var(--line); margin-bottom: 18px;
+}
+.question-prompt { color: var(--muted); font-size: 0.92rem; margin-bottom: 14px; font-weight: 500; }
+.question-word { font-size: 2.4rem; font-weight: 700; color: var(--primary); line-height: 1.25; margin: 0; word-break: break-word; }
+.question-word.arabic { font-size: 2.6rem; }
+
+.choices { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.choice {
+  background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius);
+  padding: 16px 20px; cursor: pointer; font-size: 1.25rem; font-weight: 500;
+  font-family: inherit; color: var(--ink);
+  transition: border-color 0.15s, background 0.15s, transform 0.1s; text-align: center;
+}
+.choice:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); transform: translateY(-1px); }
+.choice.correct { border-color: var(--success); background: var(--success-soft); color: var(--success-ink); }
+.choice.wrong { border-color: var(--danger); background: var(--danger-soft); color: var(--danger-ink); }
+.choice:disabled { cursor: default; }
+
+#write-area { margin-bottom: 4px; }
+.answer-input {
+  width: 100%; padding: 18px 22px; font-size: 1.5rem;
+  font-family: 'Tajawal', 'Rubik', sans-serif; font-weight: 500;
+  border: 2px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); color: var(--ink); text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.answer-input::placeholder { color: var(--muted); font-weight: 400; }
+.answer-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+.answer-input.correct { border-color: var(--success); background: var(--success-soft); color: var(--success-ink); }
+.answer-input.wrong { border-color: var(--danger); background: var(--danger-soft); color: var(--danger-ink); }
+
+.feedback { margin-top: 14px; padding: 14px 18px; border-radius: var(--radius); text-align: center; font-weight: 500; font-size: 1rem; display: none; border: 1px solid transparent; }
+.feedback.show { display: block; }
+.feedback.right { background: var(--success-soft); color: var(--success-ink); border-color: var(--success); }
+.feedback.miss { background: var(--danger-soft); color: var(--danger-ink); border-color: var(--danger); }
+.feedback .correct-answer { font-weight: 700; font-size: 1.15em; }
+
+.btn { padding: 14px 22px; border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: transform 0.1s, box-shadow 0.15s, background 0.15s, border-color 0.15s; }
+.btn-primary { background: var(--primary); color: white; box-shadow: var(--shadow); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shadow-primary); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-secondary { background: var(--surface); color: var(--ink); border: 2px solid var(--line); }
+.btn-secondary:hover { border-color: var(--primary); background: var(--surface-2); }
+
+.action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.action-row .btn { flex: 1; min-width: 120px; }
+.nav-row { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+.nav-row .btn { flex: 1; min-width: 140px; }
+
+.word-list { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--line); overflow: hidden; box-shadow: var(--shadow-soft); }
+.word-list-scroll { overflow-x: auto; }
+.word-list table { width: 100%; border-collapse: collapse; }
+.word-list th { background: var(--surface-2); padding: 14px 16px; text-align: center; font-weight: 700; color: var(--ink); border-bottom: 2px solid var(--line); font-size: 1rem; }
+.word-list td { padding: 14px 16px; text-align: center; border-bottom: 1px solid var(--line); font-size: 1.15rem; }
+.word-list tr:last-child td { border-bottom: none; }
+.word-list tr:hover td { background: var(--surface-2); }
+.word-list .heb { font-weight: 600; color: var(--ink); }
+.word-list .ara { color: var(--primary); font-weight: 500; }
+
+.success-screen { text-align: center; padding: 40px 20px 20px; background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--line); box-shadow: var(--shadow-soft); }
+.success-emoji { font-size: 4.5rem; margin-bottom: 8px; display: block; animation: bounce-in 0.6s ease-out; }
+@keyframes bounce-in { 0% { transform: scale(0); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.success-title { font-size: 2rem; font-weight: 700; color: var(--ink); margin: 0 0 6px; }
+.success-arabic { font-size: 1.5rem; color: var(--primary); margin-bottom: 22px; font-weight: 700; }
+.success-score { background: var(--success-soft); color: var(--success-ink); padding: 14px 24px; border-radius: var(--radius); font-size: 1.15rem; font-weight: 700; display: inline-block; margin-bottom: 24px; font-variant-numeric: tabular-nums; }
+
+#confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+
+.view { display: none; }
+.view.active { display: block; animation: view-in 0.25s ease-out; }
+@keyframes view-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+.group-card:focus-visible, .mode-card:focus-visible, .choice:focus-visible, .btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="container">
+  <div id="view-groups" class="view active">
+    <div class="header">
+      <div class="emoji-row">🌟 📚 🎯</div>
+      <h1>משחק המילים</h1>
+      <p class="subtitle">עברית ↔ ערבית · <span class="accent arabic">اختر مجموعة وابدأ التمرين</span></p>
+    </div>
+    <div class="groups" id="groups-list"></div>
+  </div>
+
+  <div id="view-modes" class="view">
+    <div class="header">
+      <div class="emoji-row" id="mode-emoji">📖</div>
+      <h1 id="mode-group-title">קבוצה</h1>
+      <p class="subtitle">בחר איך לתרגל · <span class="accent arabic">اختر طريقة التمرين</span></p>
+    </div>
+    <div class="modes">
+      <button class="mode-card" data-mode="he-ar-choose"><div class="mode-line-1">עברית → ערבית</div><div class="mode-line-2">בחירה · اختيار</div></button>
+      <button class="mode-card" data-mode="ar-he-choose"><div class="mode-line-1">ערבית → עברית</div><div class="mode-line-2">בחירה · اختيار</div></button>
+      <button class="mode-card" data-mode="he-ar-write"><div class="mode-line-1">עברית → ערבית ✍️</div><div class="mode-line-2">כתיבה · كتابة</div></button>
+      <button class="mode-card" data-mode="ar-he-write"><div class="mode-line-1">ערבית → עברית ✍️</div><div class="mode-line-2">כתיבה · كتابة</div></button>
+      <button class="mode-card" data-mode="mixed"><div class="mode-line-1">תרגול מעורב 🎲</div><div class="mode-line-2">הכול ביחד · مختلط</div></button>
+      <button class="mode-card" data-mode="list"><div class="mode-line-1">רשימת מילים 📋</div><div class="mode-line-2">قائمة الكلمات</div></button>
+    </div>
+    <div class="nav-row"><button class="btn btn-secondary" onclick="showGroups()">🏠 חזרה לקבוצות</button></div>
+  </div>
+
+  <div id="view-practice" class="view">
+    <div class="practice-header">
+      <div class="progress" id="progress-label">שאלה 1/10</div>
+      <div class="score" id="score-label">ניקוד: 0</div>
+    </div>
+    <div class="question-card">
+      <div class="question-prompt" id="question-prompt">מה הפירוש?</div>
+      <div class="question-word" id="question-word"></div>
+    </div>
+    <div id="choices-area" class="choices" hidden></div>
+    <div id="write-area" hidden>
+      <input class="answer-input" id="write-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div class="action-row"><button class="btn btn-primary" id="check-btn">בדיקה · تحقّق</button></div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="action-row"><button class="btn btn-primary" id="next-btn" hidden>השאלה הבאה ➜</button></div>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="showModes()">⬅ חזרה לקבוצה</button>
+      <button class="btn btn-secondary" onclick="showGroups()">🏠 חזרה לקבוצות</button>
+    </div>
+  </div>
+
+  <div id="view-success" class="view">
+    <div class="success-screen">
+      <span class="success-emoji">🎉</span>
+      <h1 class="success-title">כל הכבוד!</h1>
+      <div class="success-arabic arabic">أحسنت! 🌟</div>
+      <div class="success-score" id="final-score"></div>
+      <div class="action-row"><button class="btn btn-primary" onclick="restartRound()">🔁 שוב · مرة ثانية</button></div>
+      <div class="nav-row">
+        <button class="btn btn-secondary" onclick="showModes()">⬅ חזרה לקבוצה</button>
+        <button class="btn btn-secondary" onclick="showGroups()">🏠 חזרה לקבוצות</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-list" class="view">
+    <div class="header">
+      <div class="emoji-row">📋</div>
+      <h1 id="list-title">רשימת מילים</h1>
+      <p class="subtitle arabic">قائمة الكلمات</p>
+    </div>
+    <div class="word-list">
+      <div class="word-list-scroll">
+        <table>
+          <thead><tr><th>עברית</th><th class="arabic">عربي</th></tr></thead>
+          <tbody id="list-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="showModes()">⬅ חזרה לקבוצה</button>
+      <button class="btn btn-secondary" onclick="showGroups()">🏠 חזרה לקבוצות</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js"></script>
+<script>
+const GROUPS = [
+  { name: 'קבוצה 1', emoji: '🍎', words: [
+    { he: 'צדק', ar: 'كان محقًا' },
+    { he: 'בעלי חיים', ar: 'كائنات حية' },
+    { he: 'חדר', ar: 'غرفة' },
+    { he: 'תמונה', ar: 'صورة' },
+    { he: 'אל', ar: 'إلى' },
+    { he: 'בדק', ar: 'فحص' },
+    { he: 'קרה', ar: 'حدث' },
+    { he: 'דבר', ar: 'شيء' },
+    { he: 'לפני', ar: 'قبل' },
+    { he: 'אחרי', ar: 'بعد' },
+    { he: 'התרגש', ar: 'تحمّس' },
+    { he: 'סרטון', ar: 'مقطع فيديو' },
+  ]},
+  { name: 'קבוצה 2', emoji: '🥦', words: [
+    { he: 'חיות', ar: 'حيوانات' },
+    { he: 'טבע', ar: 'طبيعة' },
+    { he: 'חדש', ar: 'جديد' },
+    { he: 'ישן', ar: 'قديم' },
+    { he: 'הגיע', ar: 'وصل' },
+    { he: 'סיפר', ar: 'حكى' },
+    { he: 'חיפש', ar: 'بحث' },
+    { he: 'למחרת', ar: 'في اليوم التالي' },
+    { he: 'צייר', ar: 'رسم' },
+    { he: 'חבר', ar: 'صديق' },
+    { he: 'פיל', ar: 'فيل' },
+    { he: 'ביקר', ar: 'زار' },
+  ]},
+  { name: 'קבוצה 3', emoji: '⚡', words: [
+    { he: 'ראה', ar: 'رأى' },
+    { he: 'בעזרת', ar: 'بمساعدة' },
+    { he: 'רץ', ar: 'يركض' },
+    { he: 'של', ar: 'لـ' },
+    { he: 'יכול', ar: 'يستطيع' },
+    { he: 'ילד', ar: 'ولد' },
+    { he: 'בית ספר', ar: 'مدرسة' },
+    { he: 'בית חולים', ar: 'مستشفى' },
+    { he: 'אמר', ar: 'قال' },
+    { he: 'למד', ar: 'تعلّم' },
+  ]},
+  { name: 'קבוצה 4', emoji: '🌈', words: [
+    { he: 'חשוב', ar: 'مهم' },
+    { he: 'עצוב', ar: 'حزين' },
+    { he: 'שמח', ar: 'سعيد' },
+    { he: 'הלך', ar: 'ذهب' },
+    { he: 'שלשום', ar: 'أول أمس' },
+    { he: 'פרח', ar: 'زهرة' },
+    { he: 'עץ', ar: 'شجرة' },
+    { he: 'חכם', ar: 'ذكي' },
+    { he: 'טיפש', ar: 'غبي' },
+    { he: 'צוחק', ar: 'يضحك' },
+    { he: 'בוכה', ar: 'يبكي' },
+    { he: 'לבקר', ar: 'أن يزور' },
+  ]},
+];
+
+let state = { groupIdx: 0, mode: null, questions: [], qIdx: 0, score: 0, current: null };
+
+function shuffle(a) {
+  const arr = a.slice();
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+
+function normalize(s) {
+  return (s || '').trim()
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[\u0591-\u05C7]/g, '')
+    .replace(/\u0640/g, '')
+    .replace(/[إأآا]/g, 'ا')
+    .replace(/[يى]/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/\s+/g, ' ')
+    .replace(/[.,!?،؟"'`]/g, '')
+    .toLowerCase();
+}
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showGroups() {
+  const list = document.getElementById('groups-list');
+  list.innerHTML = '';
+  GROUPS.forEach((g, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'group-card';
+    btn.innerHTML = `<div class="group-emoji">${g.emoji}</div><div class="group-title">${g.name}</div><div class="group-count">${g.words.length} מילים · <span class="arabic">${g.words.length} كلمة</span></div>`;
+    btn.onclick = () => openGroup(i);
+    list.appendChild(btn);
+  });
+  showView('view-groups');
+}
+
+function openGroup(idx) {
+  state.groupIdx = idx;
+  document.getElementById('mode-group-title').textContent = GROUPS[idx].name;
+  document.getElementById('mode-emoji').textContent = GROUPS[idx].emoji;
+  showView('view-modes');
+}
+
+document.querySelectorAll('.mode-card').forEach(card => { card.onclick = () => startMode(card.dataset.mode); });
+
+function startMode(mode) {
+  state.mode = mode;
+  if (mode === 'list') { showList(); return; }
+  const words = GROUPS[state.groupIdx].words;
+  const shuffled = shuffle(words);
+  state.questions = shuffled.map(w => {
+    let direction, type;
+    if (mode === 'he-ar-choose') { direction = 'he->ar'; type = 'choose'; }
+    else if (mode === 'ar-he-choose') { direction = 'ar->he'; type = 'choose'; }
+    else if (mode === 'he-ar-write') { direction = 'he->ar'; type = 'write'; }
+    else if (mode === 'ar-he-write') { direction = 'ar->he'; type = 'write'; }
+    else { direction = Math.random() < 0.5 ? 'he->ar' : 'ar->he'; type = Math.random() < 0.5 ? 'choose' : 'write'; }
+    return { word: w, direction, type };
+  });
+  state.qIdx = 0; state.score = 0;
+  showView('view-practice');
+  nextQuestion();
+}
+
+function nextQuestion() {
+  if (state.qIdx >= state.questions.length) { showSuccess(); return; }
+  const q = state.questions[state.qIdx];
+  state.current = q;
+  const isHeToAr = q.direction === 'he->ar';
+  const promptWord = isHeToAr ? q.word.he : q.word.ar;
+  const promptClass = isHeToAr ? 'hebrew' : 'arabic';
+  document.getElementById('progress-label').textContent = `שאלה ${state.qIdx + 1}/${state.questions.length}`;
+  document.getElementById('score-label').textContent = `ניקוד: ${state.score}`;
+  document.getElementById('question-prompt').textContent = isHeToAr ? 'איך אומרים בערבית? · ما معناها بالعربية؟' : 'איך אומרים בעברית? · ما معناها بالعبرية؟';
+  const wordEl = document.getElementById('question-word');
+  wordEl.textContent = promptWord;
+  wordEl.className = 'question-word ' + promptClass;
+  const feedback = document.getElementById('feedback');
+  feedback.className = 'feedback'; feedback.textContent = '';
+  document.getElementById('next-btn').hidden = true;
+  if (q.type === 'choose') setupChoose(q, isHeToAr); else setupWrite(q, isHeToAr);
+}
+
+function setupChoose(q, isHeToAr) {
+  document.getElementById('write-area').hidden = true;
+  const area = document.getElementById('choices-area');
+  area.hidden = false; area.innerHTML = '';
+  const correct = isHeToAr ? q.word.ar : q.word.he;
+  const answerClass = isHeToAr ? 'arabic' : 'hebrew';
+  const pool = GROUPS[state.groupIdx].words.map(w => isHeToAr ? w.ar : w.he).filter(v => v !== correct);
+  const distractors = shuffle(pool).slice(0, 3);
+  const options = shuffle([correct, ...distractors]);
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'choice ' + answerClass;
+    btn.textContent = opt;
+    btn.onclick = () => handleChoice(btn, opt, correct);
+    area.appendChild(btn);
+  });
+}
+
+function handleChoice(btn, chosen, correct) {
+  const buttons = document.querySelectorAll('#choices-area .choice');
+  buttons.forEach(b => { b.disabled = true; });
+  const isRight = normalize(chosen) === normalize(correct);
+  if (isRight) {
+    btn.classList.add('correct'); state.score++;
+    document.getElementById('score-label').textContent = `ניקוד: ${state.score}`;
+    showFeedback(true);
+  } else {
+    btn.classList.add('wrong');
+    buttons.forEach(b => { if (normalize(b.textContent) === normalize(correct)) b.classList.add('correct'); });
+    showFeedback(false, correct);
+  }
+  document.getElementById('next-btn').hidden = false;
+}
+
+function setupWrite(q, isHeToAr) {
+  document.getElementById('choices-area').hidden = true;
+  const area = document.getElementById('write-area');
+  area.hidden = false;
+  const input = document.getElementById('write-input');
+  input.value = ''; input.disabled = false;
+  input.className = 'answer-input ' + (isHeToAr ? 'arabic' : 'hebrew');
+  input.placeholder = isHeToAr ? 'اكتب بالعربية...' : 'כתוב בעברית...';
+  input.dir = 'rtl'; input.lang = isHeToAr ? 'ar' : 'he';
+  const checkBtn = document.getElementById('check-btn');
+  checkBtn.disabled = false; checkBtn.hidden = false;
+  const correct = isHeToAr ? q.word.ar : q.word.he;
+  checkBtn.onclick = () => handleWrite(input.value, correct);
+  input.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!checkBtn.disabled) handleWrite(input.value, correct);
+      else document.getElementById('next-btn').click();
+    }
+  };
+  setTimeout(() => input.focus(), 40);
+}
+
+function handleWrite(value, correct) {
+  const input = document.getElementById('write-input');
+  const checkBtn = document.getElementById('check-btn');
+  const isRight = normalize(value) === normalize(correct);
+  input.disabled = true; checkBtn.disabled = true; checkBtn.hidden = true;
+  if (isRight) {
+    input.classList.add('correct'); state.score++;
+    document.getElementById('score-label').textContent = `ניקוד: ${state.score}`;
+    showFeedback(true);
+  } else {
+    input.classList.add('wrong');
+    showFeedback(false, correct);
+  }
+  document.getElementById('next-btn').hidden = false;
+  document.getElementById('next-btn').focus();
+}
+
+const RIGHT_MSGS = ['כל הכבוד! أحسنت! ✨', 'מצוין! ممتاز! 🌟', 'נכון מאוד! صحيح! 🎯', 'יופי! رائع! 💪', 'עבודה טובה! أداء رائع! 👏'];
+
+function showFeedback(isRight, correct) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback show ' + (isRight ? 'right' : 'miss');
+  if (isRight) fb.textContent = RIGHT_MSGS[Math.floor(Math.random() * RIGHT_MSGS.length)];
+  else fb.innerHTML = `לא נכון · التصحيح: <span class="correct-answer">${correct}</span>`;
+}
+
+document.getElementById('next-btn').onclick = () => { state.qIdx++; nextQuestion(); };
+
+function showList() {
+  const body = document.getElementById('list-body');
+  document.getElementById('list-title').textContent = 'רשימת מילים · ' + GROUPS[state.groupIdx].name;
+  body.innerHTML = '';
+  GROUPS[state.groupIdx].words.forEach(w => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="heb hebrew">${w.he}</td><td class="ara arabic">${w.ar}</td>`;
+    body.appendChild(tr);
+  });
+  showView('view-list');
+}
+
+function showSuccess() {
+  document.getElementById('final-score').textContent = `ניקוד: ${state.score} / ${state.questions.length}`;
+  showView('view-success');
+  fireConfetti();
+}
+
+function restartRound() { startMode(state.mode); }
+function showModes() { showView('view-modes'); }
+
+function fireConfetti() {
+  if (typeof confetti !== 'function') return;
+  const canvas = document.getElementById('confetti-canvas');
+  const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+  const colors = ['#FF7A4D', '#2FB8A8', '#FFC94D', '#B084F5', '#7BC96F'];
+  myConfetti({ particleCount: 130, spread: 85, origin: { y: 0.4 }, colors });
+  setTimeout(() => {
+    myConfetti({ particleCount: 60, spread: 100, origin: { x: 0.15, y: 0.5 }, colors });
+    myConfetti({ particleCount: 60, spread: 100, origin: { x: 0.85, y: 0.5 }, colors });
+  }, 250);
+}
+
+showGroups();
+</script>
+</body>
+</html>
